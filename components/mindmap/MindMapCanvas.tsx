@@ -28,7 +28,11 @@ export default function MindMapCanvas() {
   } = useMindFlowStore();
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 });
+  const [transform, setTransform] = useState<Transform>(() => ({
+    x: typeof window !== 'undefined' ? window.innerWidth / 2 : 700,
+    y: typeof window !== 'undefined' ? window.innerHeight / 2 : 400,
+    scale: 1,
+  }));
   const isPanning = useRef(false);
   const lastPan = useRef({ x: 0, y: 0 });
   const touchDist = useRef(0);

@@ -9,10 +9,12 @@ import {
   DEFAULT_COLORS,
 } from './types';
 
+let _idCounter = 0;
 const generateId = () => `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+const generateDefaultId = (name: string) => `default_${name.toLowerCase().replace(/\s+/g, '_')}`;
 
-const createNode = (overrides: Partial<MindNode> & { label: string; color: string }): MindNode => ({
-  id: generateId(),
+const createNode = (overrides: Partial<MindNode> & { label: string; color: string; id?: string }): MindNode => ({
+  id: overrides.id || generateId(),
   parentId: null,
   position: { x: 0, y: 0 },
   collapsed: false,
@@ -27,40 +29,41 @@ const getDefaultData = (): MindFlowData => {
     month: 'long',
     day: 'numeric',
   });
+  const overdueDeadline = new Date(Date.now() - 86400000).toISOString();
 
-  // Tasks mode
-  const tasksRoot = createNode({ label: 'My Workspace', color: '#6366f1', isRoot: true });
-  const p1 = createNode({ label: 'Design System', color: '#ec4899', parentId: tasksRoot.id, position: { x: 320, y: -160 } });
-  const p2 = createNode({ label: 'Backend API', color: '#10b981', parentId: tasksRoot.id, position: { x: 320, y: 160 } });
-  const t1 = createNode({ label: 'Create color palette', color: '#ec4899', parentId: p1.id, position: { x: 620, y: -260 }, status: 'done' as const, priority: 'normal' as const });
-  const t2 = createNode({ label: 'Design components', color: '#ec4899', parentId: p1.id, position: { x: 620, y: -160 }, status: 'doing' as const, priority: 'high' as const });
-  const t3 = createNode({ label: 'Build auth endpoints', color: '#10b981', parentId: p2.id, position: { x: 620, y: 100 }, status: 'todo' as const, priority: 'urgent' as const, deadline: new Date(Date.now() - 86400000).toISOString() });
-  const t4 = createNode({ label: 'Database schema', color: '#10b981', parentId: p2.id, position: { x: 620, y: 200 }, status: 'doing' as const, priority: 'high' as const });
+  // Tasks mode — use fixed IDs so SSR always matches client
+  const tasksRoot = createNode({ id: 'df_tasks_root', label: 'My Workspace', color: '#6366f1', isRoot: true });
+  const p1 = createNode({ id: 'df_tasks_p1', label: 'Design System', color: '#ec4899', parentId: tasksRoot.id, position: { x: 320, y: -160 } });
+  const p2 = createNode({ id: 'df_tasks_p2', label: 'Backend API', color: '#10b981', parentId: tasksRoot.id, position: { x: 320, y: 160 } });
+  const t1 = createNode({ id: 'df_tasks_t1', label: 'Create color palette', color: '#ec4899', parentId: p1.id, position: { x: 620, y: -260 }, status: 'done' as const, priority: 'normal' as const });
+  const t2 = createNode({ id: 'df_tasks_t2', label: 'Design components', color: '#ec4899', parentId: p1.id, position: { x: 620, y: -160 }, status: 'doing' as const, priority: 'high' as const });
+  const t3 = createNode({ id: 'df_tasks_t3', label: 'Build auth endpoints', color: '#10b981', parentId: p2.id, position: { x: 620, y: 100 }, status: 'todo' as const, priority: 'urgent' as const, deadline: overdueDeadline });
+  const t4 = createNode({ id: 'df_tasks_t4', label: 'Database schema', color: '#10b981', parentId: p2.id, position: { x: 620, y: 200 }, status: 'doing' as const, priority: 'high' as const });
 
   // Planner mode
-  const planRoot = createNode({ label: today, color: '#f59e0b', isRoot: true });
-  const morning = createNode({ label: 'Morning', color: '#f59e0b', parentId: planRoot.id, position: { x: -220, y: -200 } });
-  const afternoon = createNode({ label: 'Afternoon', color: '#3b82f6', parentId: planRoot.id, position: { x: 220, y: -200 } });
-  const evening = createNode({ label: 'Evening', color: '#8b5cf6', parentId: planRoot.id, position: { x: 220, y: 200 } });
-  const someday = createNode({ label: 'Someday', color: '#6b7280', parentId: planRoot.id, position: { x: -220, y: 200 } });
-  const pm1 = createNode({ label: 'Review PRs', color: '#f59e0b', parentId: morning.id, position: { x: -420, y: -280 }, estimatedTime: 30, completed: false });
-  const pm2 = createNode({ label: 'Team standup', color: '#f59e0b', parentId: morning.id, position: { x: -420, y: -180 }, estimatedTime: 15, completed: true });
+  const planRoot = createNode({ id: 'df_plan_root', label: today, color: '#f59e0b', isRoot: true });
+  const morning = createNode({ id: 'df_plan_morning', label: 'Morning', color: '#f59e0b', parentId: planRoot.id, position: { x: -220, y: -200 } });
+  const afternoon = createNode({ id: 'df_plan_afternoon', label: 'Afternoon', color: '#3b82f6', parentId: planRoot.id, position: { x: 220, y: -200 } });
+  const evening = createNode({ id: 'df_plan_evening', label: 'Evening', color: '#8b5cf6', parentId: planRoot.id, position: { x: 220, y: 200 } });
+  const someday = createNode({ id: 'df_plan_someday', label: 'Someday', color: '#6b7280', parentId: planRoot.id, position: { x: -220, y: 200 } });
+  const pm1 = createNode({ id: 'df_plan_pm1', label: 'Review PRs', color: '#f59e0b', parentId: morning.id, position: { x: -420, y: -280 }, estimatedTime: 30, completed: false });
+  const pm2 = createNode({ id: 'df_plan_pm2', label: 'Team standup', color: '#f59e0b', parentId: morning.id, position: { x: -420, y: -180 }, estimatedTime: 15, completed: true });
 
   // Goals mode
-  const goalsRoot = createNode({ label: '2024 Goals', color: '#6366f1', isRoot: true });
-  const g1 = createNode({ label: 'Revenue', color: '#10b981', parentId: goalsRoot.id, position: { x: 300, y: -200 }, targetValue: 100000, currentValue: 67000 });
-  const g2 = createNode({ label: 'Fitness', color: '#ec4899', parentId: goalsRoot.id, position: { x: -300, y: -200 }, targetValue: 50, currentValue: 32 });
-  const g3 = createNode({ label: 'Learning', color: '#f59e0b', parentId: goalsRoot.id, position: { x: 0, y: 280 }, targetValue: 24, currentValue: 18 });
-  const g1a = createNode({ label: 'Q3: $42K', color: '#10b981', parentId: g1.id, position: { x: 540, y: -260 }, targetValue: 42000, currentValue: 42000 });
-  const g1b = createNode({ label: 'Q4: $33K', color: '#10b981', parentId: g1.id, position: { x: 540, y: -160 }, targetValue: 33000, currentValue: 25000 });
+  const goalsRoot = createNode({ id: 'df_goals_root', label: '2024 Goals', color: '#6366f1', isRoot: true });
+  const g1 = createNode({ id: 'df_goals_g1', label: 'Revenue', color: '#10b981', parentId: goalsRoot.id, position: { x: 300, y: -200 }, targetValue: 100000, currentValue: 67000 });
+  const g2 = createNode({ id: 'df_goals_g2', label: 'Fitness', color: '#ec4899', parentId: goalsRoot.id, position: { x: -300, y: -200 }, targetValue: 50, currentValue: 32 });
+  const g3 = createNode({ id: 'df_goals_g3', label: 'Learning', color: '#f59e0b', parentId: goalsRoot.id, position: { x: 0, y: 280 }, targetValue: 24, currentValue: 18 });
+  const g1a = createNode({ id: 'df_goals_g1a', label: 'Q3: $42K', color: '#10b981', parentId: g1.id, position: { x: 540, y: -260 }, targetValue: 42000, currentValue: 42000 });
+  const g1b = createNode({ id: 'df_goals_g1b', label: 'Q4: $33K', color: '#10b981', parentId: g1.id, position: { x: 540, y: -160 }, targetValue: 33000, currentValue: 25000 });
 
   // Knowledge mode
-  const knowledgeRoot = createNode({ label: 'My Knowledge', color: '#06b6d4', isRoot: true });
-  const k1 = createNode({ label: 'Development', color: '#3b82f6', parentId: knowledgeRoot.id, position: { x: 300, y: -200 } });
-  const k2 = createNode({ label: 'Product', color: '#ec4899', parentId: knowledgeRoot.id, position: { x: -300, y: -200 } });
-  const k3 = createNode({ label: 'Business', color: '#10b981', parentId: knowledgeRoot.id, position: { x: 0, y: 280 } });
-  const kn1 = createNode({ label: 'React Patterns', color: '#3b82f6', parentId: k1.id, position: { x: 560, y: -280 }, notes: 'Key React patterns: compound components, render props, custom hooks. Use composition over inheritance. Prefer controlled components for forms.', tags: ['react', 'frontend'] });
-  const kn2 = createNode({ label: 'System Design', color: '#3b82f6', parentId: k1.id, position: { x: 560, y: -160 }, notes: 'CAP theorem, distributed systems, load balancing. Design for failure. Use caching layers. Horizontal scaling preferred.', tags: ['architecture', 'backend'] });
+  const knowledgeRoot = createNode({ id: 'df_know_root', label: 'My Knowledge', color: '#06b6d4', isRoot: true });
+  const k1 = createNode({ id: 'df_know_k1', label: 'Development', color: '#3b82f6', parentId: knowledgeRoot.id, position: { x: 300, y: -200 } });
+  const k2 = createNode({ id: 'df_know_k2', label: 'Product', color: '#ec4899', parentId: knowledgeRoot.id, position: { x: -300, y: -200 } });
+  const k3 = createNode({ id: 'df_know_k3', label: 'Business', color: '#10b981', parentId: knowledgeRoot.id, position: { x: 0, y: 280 } });
+  const kn1 = createNode({ id: 'df_know_kn1', label: 'React Patterns', color: '#3b82f6', parentId: k1.id, position: { x: 560, y: -280 }, notes: 'Key React patterns: compound components, render props, custom hooks. Use composition over inheritance. Prefer controlled components for forms.', tags: ['react', 'frontend'] });
+  const kn2 = createNode({ id: 'df_know_kn2', label: 'System Design', color: '#3b82f6', parentId: k1.id, position: { x: 560, y: -160 }, notes: 'CAP theorem, distributed systems, load balancing. Design for failure. Use caching layers. Horizontal scaling preferred.', tags: ['architecture', 'backend'] });
 
   return {
     tasks: { nodes: [tasksRoot, p1, p2, t1, t2, t3, t4] },
